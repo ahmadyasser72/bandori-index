@@ -47,3 +47,16 @@ export const EventType = z
 		"festival",
 	])
 	.transform((type) => EventTypeMap[type]);
+
+const SongDifficulties = [
+	"easy",
+	"normal",
+	"hard",
+	"expert",
+	"special",
+] as const;
+export const SongDifficulty = z.coerce
+	.number()
+	.min(0)
+	.max(4)
+	.transform((it) => SongDifficulties[it]!);

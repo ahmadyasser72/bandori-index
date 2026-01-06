@@ -10,9 +10,9 @@ export const Events = z
 		z.string(),
 		z.object({ eventName: z.string().apply(parseRegionTuple) }),
 	)
-	.transform(async (cards) => {
+	.transform(async (events) => {
 		const entries = await Promise.all(
-			Object.entries(cards)
+			Object.entries(events)
 				.filter(([, { eventName }]) => !!eventName.jp)
 				.map(
 					async ([id]) =>

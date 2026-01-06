@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import path from "node:path";
 
 import * as devalue from "devalue";
@@ -9,6 +9,7 @@ import { Cards } from "./schema/cards";
 import { Characters } from "./schema/characters";
 import { Events } from "./schema/events";
 import { Gachas } from "./schema/gachas";
+import { Songs } from "./schema/songs";
 
 const DATA_ENTRIES = [
 	["bands", "/api/bands/all.1.json", Bands],
@@ -16,6 +17,7 @@ const DATA_ENTRIES = [
 	["characters", "/api/characters/main.3.json", Characters],
 	["events", "/api/events/all.5.json", Events],
 	["gachas", "/api/gacha/all.5.json", Gachas],
+	["songs", "/api/songs/all.5.json", Songs],
 ] as const;
 
 const data = Object.fromEntries(

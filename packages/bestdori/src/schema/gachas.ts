@@ -13,7 +13,7 @@ export const Gachas = z
 			type: GachaType,
 		}),
 	)
-	.transform(async (cards) => {
+	.transform(async (gachas) => {
 		const allowedGachas = new Set([
 			"permanent",
 			"limited",
@@ -23,7 +23,7 @@ export const Gachas = z
 		]);
 
 		const entries = await Promise.all(
-			Object.entries(cards)
+			Object.entries(gachas)
 				.filter(
 					([, { gachaName, type }]) =>
 						!!gachaName.jp && allowedGachas.has(type),
