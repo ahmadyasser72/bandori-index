@@ -1,33 +1,8 @@
 import z from "zod";
 
-import { bestdori } from "..";
+import { bestdoriJSON } from "..";
 import { Id, SongDifficulty } from "./constants";
 import { dateTimestamp, parseRegionTuple } from "./helpers";
-
-// /api/songs/all.5.json
-export const Songs = z
-	.record(
-		z.string(),
-		z.object({ musicTitle: z.string().apply(parseRegionTuple) }),
-	)
-	.transform(async (songs) => {
-		const entries = await Promise.all(
-			Object.entries(songs)
-				.filter(([, { musicTitle }]) => !!musicTitle.jp || !!musicTitle.en)
-				.map(
-					async ([id]) =>
-						[
-							Number(id),
-							await bestdori(`/api/songs/${id}.json`)
-								.then((response) => response.json())
-								.then(Song.parse),
-						] as const,
-				),
-		);
-
-		return new Map(entries);
-	})
-	.readonly();
 
 // /api/songs/$id.json
 export const Song = z
@@ -53,6 +28,27 @@ export const Song = z
 	})
 	.transform(({ musicTitle: title, ...entry }) => ({ title, ...entry }))
 	.readonly();
+
+// /api/songs/all.5.json
+export const Songs = z
+	.record(
+		z.string(),
+		z.object({ musicTitle: z.string().apply(parseRegionTuple) }),
+	)
+	.pipe(
+		z.preprocess(async (songs) => {
+			const entries = await Promise.all(
+				Object.entries(songs)
+					.filter(([, { musicTitle }]) => !!musicTitle.jp || !!musicTitle.en)
+					.map(
+						async ([id]) =>
+							[id, await bestdoriJSON(`/api/songs/${id}.json`)] as const,
+					),
+			);
+
+			return new Map(entries);
+		}, z.map(Id, Song).readonly()),
+	);
 
 export type Songs = z.infer<typeof Songs>;
 export type Song = z.infer<typeof Song>;

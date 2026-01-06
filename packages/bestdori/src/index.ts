@@ -30,3 +30,7 @@ export const bestdori = limitFunction(
 	},
 	{ concurrency: 4 },
 );
+
+export const bestdoriJSON = <T = unknown>(
+	...args: Parameters<typeof bestdori>
+) => bestdori(...args).then((response) => response.json() as Promise<T>);

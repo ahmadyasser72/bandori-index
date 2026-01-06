@@ -3,7 +3,7 @@ import path from "node:path";
 
 import * as devalue from "devalue";
 
-import { bestdori } from ".";
+import { bestdoriJSON } from ".";
 import { Bands } from "./schema/bands";
 import { Cards } from "./schema/cards";
 import { Characters } from "./schema/characters";
@@ -23,10 +23,10 @@ const DATA_ENTRIES = [
 const data = Object.fromEntries(
 	await Promise.all(
 		DATA_ENTRIES.map(async ([name, pathname, schema]) => {
-			const json = await bestdori(pathname).then((response) => response.json());
-			const data = await schema.parseAsync(json);
+			const json = await bestdoriJSON(pathname);
+			const parsed = await schema.parseAsync(json);
 
-			return [name, data] as const;
+			return [name, parsed] as const;
 		}),
 	),
 );

@@ -1,47 +1,8 @@
 import z from "zod";
 
-import { bestdori } from "..";
+import { bestdoriJSON } from "..";
 import { CardRarity, GachaType, Id } from "./constants";
 import { dateTimestamp, parseRegionTuple } from "./helpers";
-
-// /api/gacha/all.5.json
-export const Gachas = z
-	.record(
-		z.string(),
-		z.object({
-			gachaName: z.string().apply(parseRegionTuple),
-			type: GachaType,
-		}),
-	)
-	.transform(async (gachas) => {
-		const allowedGachas = new Set([
-			"permanent",
-			"limited",
-			"dreamfes",
-			"birthday",
-			"kirafes",
-		]);
-
-		const entries = await Promise.all(
-			Object.entries(gachas)
-				.filter(
-					([, { gachaName, type }]) =>
-						!!gachaName.jp && allowedGachas.has(type),
-				)
-				.map(
-					async ([id]) =>
-						[
-							Number(id),
-							await bestdori(`/api/gacha/${id}.json`)
-								.then((response) => response.json())
-								.then(Gacha.parse),
-						] as const,
-				),
-		);
-
-		return new Map(entries);
-	})
-	.readonly();
 
 // /api/gacha/$id.json
 export const Gacha = z
@@ -109,6 +70,41 @@ export const Gacha = z
 		};
 	})
 	.readonly();
+
+// /api/gacha/all.5.json
+export const Gachas = z
+	.record(
+		z.string(),
+		z.object({
+			gachaName: z.string().apply(parseRegionTuple),
+			type: GachaType,
+		}),
+	)
+	.pipe(
+		z.preprocess(async (gachas) => {
+			const allowedGachas = new Set([
+				"permanent",
+				"limited",
+				"dreamfes",
+				"birthday",
+				"kirafes",
+			]);
+
+			const entries = await Promise.all(
+				Object.entries(gachas)
+					.filter(
+						([, { gachaName, type }]) =>
+							!!gachaName.jp && allowedGachas.has(type),
+					)
+					.map(
+						async ([id]) =>
+							[id, await bestdoriJSON(`/api/gacha/${id}.json`)] as const,
+					),
+			);
+
+			return new Map(entries);
+		}, z.map(Id, Gacha).readonly()),
+	);
 
 export type Gachas = z.infer<typeof Gachas>;
 export type Gacha = z.infer<typeof Gacha>;

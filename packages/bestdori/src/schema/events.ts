@@ -1,33 +1,8 @@
 import z from "zod";
 
-import { bestdori } from "..";
+import { bestdoriJSON } from "..";
 import { CardAttribute, EventType, Id } from "./constants";
 import { dateTimestamp, parseRegionTuple } from "./helpers";
-
-// /api/events/all.5.json
-export const Events = z
-	.record(
-		z.string(),
-		z.object({ eventName: z.string().apply(parseRegionTuple) }),
-	)
-	.transform(async (events) => {
-		const entries = await Promise.all(
-			Object.entries(events)
-				.filter(([, { eventName }]) => !!eventName.jp)
-				.map(
-					async ([id]) =>
-						[
-							Number(id),
-							await bestdori(`/api/events/${id}.json`)
-								.then((response) => response.json())
-								.then(Event.parse),
-						] as const,
-				),
-		);
-
-		return new Map(entries);
-	})
-	.readonly();
 
 // /api/events/$id.json
 export const Event = z
@@ -61,6 +36,27 @@ export const Event = z
 		}),
 	)
 	.readonly();
+
+// /api/events/all.5.json
+export const Events = z
+	.record(
+		z.string(),
+		z.object({ eventName: z.string().apply(parseRegionTuple) }),
+	)
+	.pipe(
+		z.preprocess(async (events) => {
+			const entries = await Promise.all(
+				Object.entries(events)
+					.filter(([, { eventName }]) => !!eventName.jp)
+					.map(
+						async ([id]) =>
+							[id, await bestdoriJSON(`/api/events/${id}.json`)] as const,
+					),
+			);
+
+			return new Map(entries);
+		}, z.map(Id, Event).readonly()),
+	);
 
 export type Events = z.infer<typeof Events>;
 export type Event = z.infer<typeof Event>;
