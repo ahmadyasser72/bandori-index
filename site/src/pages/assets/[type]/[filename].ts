@@ -16,12 +16,27 @@ import {
 	gachas,
 	songs,
 } from "@bandori-index/bestdori/data";
+import { compressAudio } from "~/lib/preprocess/compress-audio";
+import { compressImage } from "~/lib/preprocess/compress-image";
+import { AUDIO_FORMAT, IMAGE_FORMAT } from "~/lib/preprocess/config";
 
 export const prerender = true;
 
-export const GET: APIRoute<Props, Params> = async ({ props }) => {
+export const GET: APIRoute<Props, Params> = async ({ props, params }) => {
 	const response = await bestdori(props.pathname, true);
-	return response;
+
+	const filename = [params.type, params.filename].join("__");
+	const buffer = Buffer.from(await response.arrayBuffer());
+	switch (props.kind) {
+		case "audio":
+			return compressAudio(filename, buffer);
+
+		case "image":
+			return compressImage(filename, buffer);
+
+		default:
+			throw new Error(`invalid route ${JSON.stringify({ props, params })}`);
+	}
 };
 
 export const getStaticPaths = (() => {
@@ -36,7 +51,7 @@ export const getStaticPaths = (() => {
 			props: { kind: "image" as const, pathname: assets.icon },
 		})) satisfies GetStaticPathsResult;
 	const characterAssets = [...characters.entries()].map(([id, { assets }]) => ({
-		params: { type: "character", filename: `${id}.png` },
+		params: { type: "character", filename: `${id}.${IMAGE_FORMAT}` },
 		props: { kind: "image" as const, pathname: assets.icon },
 	})) satisfies GetStaticPathsResult;
 
@@ -44,7 +59,7 @@ export const getStaticPaths = (() => {
 		const audio = assets.voice
 			? [
 					{
-						params: { type: "card", filename: `${id}.mp3` },
+						params: { type: "card", filename: `${id}.${AUDIO_FORMAT}` },
 						props: { kind: "audio" as const, pathname: assets.voice },
 					},
 				]
@@ -55,7 +70,8 @@ export const getStaticPaths = (() => {
 				params: {
 					type: "card",
 					filename:
-						[id, variant, trained ? "trained" : "base"].join("_") + ".png",
+						[id, variant, trained ? "trained" : "base"].join("_") +
+						".${IMAGE_FORMAT}",
 				},
 				props: { kind: "image" as const, pathname },
 			})),
@@ -66,7 +82,10 @@ export const getStaticPaths = (() => {
 
 	const eventAssets = [...events.entries()].flatMap(([id, { assets }]) =>
 		(["banner", "background"] as const).map((variant) => ({
-			params: { type: "event", filename: [id, variant].join("_") + ".png" },
+			params: {
+				type: "event",
+				filename: [id, variant].join("_") + ".${IMAGE_FORMAT}",
+			},
 			props: { kind: "image" as const, pathname: assets[variant] },
 		})),
 	) satisfies GetStaticPathsResult;
@@ -75,18 +94,21 @@ export const getStaticPaths = (() => {
 		(["logo", "banner"] as const)
 			.filter((variant) => assets[variant] !== undefined)
 			.map((variant) => ({
-				params: { type: "gacha", filename: [id, variant].join("_") + ".png" },
+				params: {
+					type: "gacha",
+					filename: [id, variant].join("_") + ".${IMAGE_FORMAT}",
+				},
 				props: { kind: "image" as const, pathname: assets[variant]! },
 			})),
 	) satisfies GetStaticPathsResult;
 
 	const songAssets = [...songs.entries()].flatMap(([id, { assets }]) => [
 		{
-			params: { type: "song", filename: `${id}.mp3` },
+			params: { type: "song", filename: `${id}.${AUDIO_FORMAT}` },
 			props: { kind: "audio" as const, pathname: assets.audio },
 		},
 		...assets.cover.map((pathname, idx) => ({
-			params: { type: "song", filename: `${id}_${idx}.png` },
+			params: { type: "song", filename: `${id}_${idx}.${IMAGE_FORMAT}` },
 			props: { kind: "image" as const, pathname },
 		})),
 	]) satisfies GetStaticPathsResult;
