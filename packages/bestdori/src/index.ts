@@ -12,13 +12,20 @@ const getGitRootPath = () =>
 	});
 
 const CACHE_DIRNAME = ".bestdori-cache";
-export const CACHE_DIR = await (async () => {
+export const BASE_CACHE_DIR = await (async () => {
 	const gitRoot = await getGitRootPath();
-	const cacheDir = path.join(gitRoot, CACHE_DIRNAME);
+	const baseDir = path.join(gitRoot, CACHE_DIRNAME);
+
+	const baseDirExists = await exists(baseDir);
+	if (!baseDirExists) await mkdir(baseDir);
+	return baseDir;
+})();
+
+const CACHE_DIR = await (async () => {
+	const cacheDir = path.join(BASE_CACHE_DIR, "responses");
 
 	const cacheDirExists = await exists(cacheDir);
 	if (!cacheDirExists) await mkdir(cacheDir);
-
 	return cacheDir;
 })();
 
@@ -30,11 +37,7 @@ export const bestdori = async <T = never>(
 ): Promise<Response> => {
 	const url = new URL(pathname, "https://bestdori.com");
 
-	const cachePath = path.join(
-		CACHE_DIR,
-		"responses",
-		pathname.replaceAll("/", "_"),
-	);
+	const cachePath = path.join(CACHE_DIR, pathname.replaceAll("/", "_"));
 	const alreadyCached = await exists(cachePath);
 	if (skipFetch !== false && alreadyCached) {
 		const cached = await readFile(cachePath);
