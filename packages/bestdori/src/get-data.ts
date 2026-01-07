@@ -180,7 +180,17 @@ const data = await time("resolve references", () => ({
 	get events() {
 		return new Map(
 			[...events.entries()].map(
-				([id, { attribute, characters, cards, assetBundleName, ...entry }]) => [
+				([
+					id,
+					{
+						attribute,
+						characters,
+						cards,
+						assetBundleName,
+						bannerAssetBundleName,
+						...entry
+					},
+				]) => [
 					id,
 					{
 						get attribute() {
@@ -198,7 +208,7 @@ const data = await time("resolve references", () => ({
 						...entry,
 
 						assets: {
-							banner: `/assets/jp/event/${assetBundleName}/images_rip/banner.png`,
+							banner: `/assets/jp/homebanner_rip/${bannerAssetBundleName}.png`,
 							background: `/assets/jp/event/${assetBundleName}/topscreen_rip/bg_eventtop.png`,
 						},
 					},
