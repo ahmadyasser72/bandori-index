@@ -1,10 +1,11 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { exists, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { limitFunction } from "p-limit";
 
 const CACHE_DIR = path.join(import.meta.dirname, "..", ".bestdori-cache");
-if (!existsSync(CACHE_DIR)) mkdirSync(CACHE_DIR);
+const cacheDirExists = await exists(CACHE_DIR);
+if (!cacheDirExists) await mkdir(CACHE_DIR);
 
 const fetch = limitFunction(globalThis.fetch, { concurrency: 4 });
 
@@ -15,8 +16,9 @@ export const bestdori = async <T = never>(
 	const url = new URL(pathname, "https://bestdori.com");
 
 	const cachePath = path.join(CACHE_DIR, pathname.replaceAll("/", "_"));
-	if (existsSync(cachePath)) {
-		const cached = readFileSync(cachePath);
+	const alreadyCached = await exists(cachePath);
+	if (alreadyCached) {
+		const cached = await readFile(cachePath);
 		if (isFresh === undefined || isFresh(JSON.parse(cached.toString())))
 			return new Response(cached);
 	}
@@ -28,7 +30,7 @@ export const bestdori = async <T = never>(
 	}
 
 	const data = await response.clone().arrayBuffer();
-	writeFileSync(cachePath, Buffer.from(data));
+	await writeFile(cachePath, Buffer.from(data));
 
 	return response;
 };

@@ -1,4 +1,4 @@
-import { writeFileSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import * as devalue from "devalue";
@@ -41,12 +41,14 @@ const get = async <K extends keyof typeof SCHEMAS>(
 	return SCHEMAS[key].parseAsync(json) as never;
 };
 
-const bands = await get("bands", "/api/bands/all.1.json");
-const cards = await get("cards", "/api/cards/all.5.json");
-const characters = await get("characters", "/api/characters/main.3.json");
-const events = await get("events", "/api/events/all.5.json");
-const gachas = await get("gachas", "/api/gacha/all.5.json");
-const songs = await get("songs", "/api/songs/all.5.json");
+const [bands, cards, characters, events, gachas, songs] = await Promise.all([
+	get("bands", "/api/bands/all.1.json"),
+	get("cards", "/api/cards/all.5.json"),
+	get("characters", "/api/characters/main.3.json"),
+	get("events", "/api/events/all.5.json"),
+	get("gachas", "/api/gacha/all.5.json"),
+	get("songs", "/api/songs/all.5.json"),
+]);
 
 const data = await time("resolve references", () => ({
 	bands,
@@ -146,8 +148,9 @@ export type Data = typeof data;
 
 const keys = Object.keys(data).join(", ");
 const content = await time("uneval data", () => devalue.uneval(data));
-await time("write data.js", () =>
-	writeFileSync(
+await time(
+	"write data.js",
+	writeFile(
 		path.join(import.meta.dirname, "data.js"),
 		`export const { ${keys} } = ${content};`,
 	),
