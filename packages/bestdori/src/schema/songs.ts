@@ -8,6 +8,7 @@ import { asRegionTuple, dateTimestamp, parseRegionTuple } from "./helpers";
 // /api/songs/$id.json
 export const Song = z
 	.object({
+		bgmId: z.string(),
 		tag: z.enum(["normal", "anime", "tie_up"]),
 		bandId: Id,
 		jacketImage: z.array(z.string()),
