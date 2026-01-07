@@ -75,6 +75,14 @@ const resourceNameList = await time(
 	),
 );
 
+const gachaLogoResourceNames = await time(
+	"fetch gachaLogoResourceNames",
+	bestdoriJSON<{ gacha: { screen: Record<string, number> } }>(
+		"/api/explorer/jp/assets/_info.json",
+		false,
+	).then((it) => new Set(Object.keys(it.gacha.screen))),
+);
+
 const data = await time("resolve references", () => ({
 	get attributes() {
 		return new Map(
@@ -241,7 +249,9 @@ const data = await time("resolve references", () => ({
 						...entry,
 
 						assets: {
-							logo: `/assets/jp/gacha/screen/${resourceName}_rip/logo.png`,
+							logo: gachaLogoResourceNames.has(resourceName)
+								? `/assets/jp/gacha/screen/${resourceName}_rip/logo.png`
+								: undefined,
 							banner: bannerAssetBundleName
 								? `/assets/jp/homebanner_rip/${bannerAssetBundleName}.png`
 								: undefined,
