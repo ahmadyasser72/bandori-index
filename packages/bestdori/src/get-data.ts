@@ -96,10 +96,7 @@ const data = await time("resolve references", () => ({
 	get cards() {
 		return new Map(
 			[...cards.entries()].map(
-				([
-					id,
-					{ characterId, attribute, resourceSetName, training, ...entry },
-				]) => [
+				([id, { characterId, attribute, resourceSetName, stat, ...entry }]) => [
 					id,
 					{
 						get character() {
@@ -141,8 +138,9 @@ const data = await time("resolve references", () => ({
 								];
 							};
 
-							const noTrained = training === undefined;
-							const noPreTrained = training?.levelLimit === 0;
+							const noTrained = stat.training === undefined;
+							const noPreTrained =
+								stat.training?.levelLimit === 0 || entry.type === "others";
 							if (noTrained) {
 								out.icon.push(icon(false));
 								out.full.push(full(false));

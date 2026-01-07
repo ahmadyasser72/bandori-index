@@ -16,7 +16,9 @@ export const Card = z
 		prefix: z.string().apply(parseRegionTuple),
 		releasedAt: dateTimestamp.apply(parseRegionTuple),
 
-		training: z.object({ levelLimit: z.number().nonnegative() }).optional(),
+		stat: z.object({
+			training: z.object({ levelLimit: z.number().nonnegative() }).optional(),
+		}),
 	})
 	.transform(({ prefix: name, ...entry }) => ({
 		name: { jp: name.jp!, en: name.en },
