@@ -11,15 +11,15 @@ const fetch = limitFunction(globalThis.fetch, { concurrency: 4 });
 
 export const bestdori = async <T = never>(
 	pathname: string,
-	isFresh?: (cached: T) => boolean,
+	skipFetch: ((cached: T) => boolean) | boolean,
 ) => {
 	const url = new URL(pathname, "https://bestdori.com");
 
 	const cachePath = path.join(CACHE_DIR, pathname.replaceAll("/", "_"));
 	const alreadyCached = await exists(cachePath);
-	if (alreadyCached) {
+	if (skipFetch !== false && alreadyCached) {
 		const cached = await readFile(cachePath);
-		if (isFresh === undefined || isFresh(JSON.parse(cached.toString())))
+		if (skipFetch === true || skipFetch(JSON.parse(cached.toString())))
 			return new Response(cached);
 	}
 

@@ -37,7 +37,10 @@ const get = async <K extends keyof typeof SCHEMAS>(
 	key: K,
 	pathname: string,
 ): Promise<z.infer<(typeof SCHEMAS)[K]>> => {
-	const json = await time(`get ${key} (${pathname})`, bestdoriJSON(pathname));
+	const json = await time(
+		`get ${key} (${pathname})`,
+		bestdoriJSON(pathname, false),
+	);
 	return SCHEMAS[key].parseAsync(json) as never;
 };
 
