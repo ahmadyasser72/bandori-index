@@ -12,7 +12,7 @@ const fetch = limitFunction(globalThis.fetch, { concurrency: 4 });
 export const bestdori = async <T = never>(
 	pathname: string,
 	skipFetch: ((cached: T) => boolean) | boolean,
-) => {
+): Promise<Response> => {
 	const url = new URL(pathname, "https://bestdori.com");
 
 	const cachePath = path.join(CACHE_DIR, pathname.replaceAll("/", "_"));
@@ -26,6 +26,9 @@ export const bestdori = async <T = never>(
 	const response = await fetch(url);
 	const isHTML = response.headers.get("content-type") === "text/html";
 	if (!response.ok || isHTML) {
+		if (pathname.startsWith("/assets/jp/"))
+			return bestdori(pathname.replace("jp", "en"), skipFetch);
+
 		throw new Error(`request to ${url.href} failed`);
 	}
 
