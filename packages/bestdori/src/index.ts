@@ -1,17 +1,9 @@
 import { exec } from "node:child_process";
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import { exists, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { limitFunction } from "p-limit";
 
-const exists = async (it: string) => {
-	try {
-		await access(it);
-		return true;
-	} catch (error) {
-		return false;
-	}
-};
 const getGitRootPath = () =>
 	new Promise<string>((resolve, reject) => {
 		exec("git rev-parse --show-toplevel", (error, stdout) =>

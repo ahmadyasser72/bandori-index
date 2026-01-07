@@ -120,19 +120,25 @@ const data = await time("resolve references", () => ({
 								voice: resourceName
 									? `/assets/jp/sound/voice/gacha/${resourceName}_rip/${resourceSetName}.mp3`
 									: undefined,
-								icon: [] as string[],
-								full: [] as string[],
+								icon: [] as [boolean, string][],
+								full: [] as [boolean, string][],
 							};
 
-							const icon = (trained: boolean) => {
+							const icon = (trained: boolean): [boolean, string] => {
 								const chunkId = Math.floor(id / 50)
 									.toString()
 									.padStart(5, "0");
 
-								return `/assets/jp/thumb/chara/card${chunkId}_rip/${resourceSetName}_${trained ? "after_training" : "normal"}.png`;
+								return [
+									trained,
+									`/assets/jp/thumb/chara/card${chunkId}_rip/${resourceSetName}_${trained ? "after_training" : "normal"}.png`,
+								];
 							};
-							const full = (trained: boolean) => {
-								return `/assets/jp/characters/resourceset/${resourceSetName}_rip/card_${trained ? "after_training" : "normal"}.png`;
+							const full = (trained: boolean): [boolean, string] => {
+								return [
+									trained,
+									`/assets/jp/characters/resourceset/${resourceSetName}_rip/card_${trained ? "after_training" : "normal"}.png`,
+								];
 							};
 
 							const noTrained = training === undefined;
@@ -216,24 +222,23 @@ const data = await time("resolve references", () => ({
 
 		return new Map(
 			[...gachas.entries()].map(
-				([id, { rates, resourceName, bannerAssetBundleName, ...entry }]) =>
-					[
-						id,
-						{
-							get rates() {
-								const { jp, en } = rates;
-								return { jp: resolveRates(jp), en: resolveRates(en) };
-							},
-							...entry,
-
-							assets: {
-								logo: `/assets/jp/gacha/screen/${resourceName}_rip/logo.png`,
-								banner: bannerAssetBundleName
-									? `/assets/jp/homebanner_rip/${bannerAssetBundleName}.png`
-									: undefined,
-							},
+				([id, { rates, resourceName, bannerAssetBundleName, ...entry }]) => [
+					id,
+					{
+						get rates() {
+							const { jp, en } = rates;
+							return { jp: resolveRates(jp), en: resolveRates(en) };
 						},
-					] as const,
+						...entry,
+
+						assets: {
+							logo: `/assets/jp/gacha/screen/${resourceName}_rip/logo.png`,
+							banner: bannerAssetBundleName
+								? `/assets/jp/homebanner_rip/${bannerAssetBundleName}.png`
+								: undefined,
+						},
+					},
+				],
 			),
 		);
 	},
