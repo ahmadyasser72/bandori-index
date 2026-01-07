@@ -12,6 +12,18 @@ import { Events } from "./schema/events";
 import { Gacha, Gachas } from "./schema/gachas";
 import { Songs } from "./schema/songs";
 
+console.time("everything");
+
+const time = async <T>(
+	message: string,
+	it: Promise<T> | (() => T),
+): Promise<T> => {
+	console.time(message);
+	const result = it instanceof Promise ? await it : it();
+	console.timeEnd(message);
+	return result;
+};
+
 const SCHEMAS = {
 	bands: Bands,
 	cards: Cards,
@@ -25,7 +37,7 @@ const get = async <K extends keyof typeof SCHEMAS>(
 	key: K,
 	pathname: string,
 ): Promise<z.infer<(typeof SCHEMAS)[K]>> => {
-	const json = await bestdoriJSON(pathname);
+	const json = await time(`get ${key} (${pathname})`, bestdoriJSON(pathname));
 	return SCHEMAS[key].parseAsync(json) as never;
 };
 
@@ -36,7 +48,7 @@ const events = await get("events", "/api/events/all.5.json");
 const gachas = await get("gachas", "/api/gacha/all.5.json");
 const songs = await get("songs", "/api/songs/all.5.json");
 
-const data = {
+const data = await time("resolve references", () => ({
 	bands,
 
 	get cards() {
@@ -129,12 +141,16 @@ const data = {
 			]),
 		);
 	},
-};
+}));
 export type Data = typeof data;
 
 const keys = Object.keys(data).join(", ");
-const content = devalue.uneval(data);
-writeFileSync(
-	path.join(import.meta.dirname, "data.js"),
-	`export const { ${keys} } = ${content};`,
+const content = await time("uneval data", () => devalue.uneval(data));
+await time("write data.js", () =>
+	writeFileSync(
+		path.join(import.meta.dirname, "data.js"),
+		`export const { ${keys} } = ${content};`,
+	),
 );
+
+console.timeEnd("everything");
