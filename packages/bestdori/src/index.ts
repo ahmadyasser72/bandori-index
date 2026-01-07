@@ -1,9 +1,26 @@
-import { exists, mkdir, readFile, writeFile } from "node:fs/promises";
+import { exec } from "node:child_process";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { limitFunction } from "p-limit";
 
-const CACHE_DIR = path.join(import.meta.dirname, "..", ".bestdori-cache");
+const exists = async (it: string) => {
+	try {
+		await access(it);
+		return true;
+	} catch (error) {
+		return false;
+	}
+};
+const getGitRootPath = () =>
+	new Promise<string>((resolve, reject) => {
+		exec("git rev-parse --show-toplevel", (error, stdout) =>
+			error ? reject(error) : resolve(stdout.trim()),
+		);
+	});
+
+const CACHE_DIRNAME = ".bestdori-cache";
+const CACHE_DIR = path.join(await getGitRootPath(), CACHE_DIRNAME);
 const cacheDirExists = await exists(CACHE_DIR);
 if (!cacheDirExists) await mkdir(CACHE_DIR);
 
