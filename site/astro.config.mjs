@@ -8,6 +8,7 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
 	adapter: cloudflare({ imageService: "passthrough" }),
 	output: "server",
+	build: { concurrency: 8 },
 
 	vite: {
 		plugins: [tailwindcss()],
