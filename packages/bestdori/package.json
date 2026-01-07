@@ -3,7 +3,8 @@
 	"type": "module",
 	"private": true,
 	"exports": {
-		"./*": "./src/data/*.ts"
+		".": "./src/index.ts",
+		"./data": "./src/data.ts"
 	},
 	"devDependencies": {
 		"@types/node": "^25.0.3",
