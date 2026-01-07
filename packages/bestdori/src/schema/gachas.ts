@@ -1,8 +1,9 @@
+import { deepEqual } from "fast-equals";
 import z from "zod";
 
 import { bestdoriJSON } from "..";
 import { CardRarity, GachaType, Id } from "./constants";
-import { dateTimestamp, parseRegionTuple } from "./helpers";
+import { asRegionTuple, dateTimestamp, parseRegionTuple } from "./helpers";
 
 // /api/gacha/$id.json
 export const Gacha = z
@@ -76,7 +77,8 @@ export const Gachas = z
 	.record(
 		z.string(),
 		z.object({
-			gachaName: z.string().apply(parseRegionTuple),
+			gachaName: z.string().apply(asRegionTuple),
+			publishedAt: z.string().apply(asRegionTuple),
 			type: GachaType,
 		}),
 	)
@@ -94,11 +96,19 @@ export const Gachas = z
 				Object.entries(gachas)
 					.filter(
 						([, { gachaName, type }]) =>
-							!!gachaName.jp && allowedGachas.has(type),
+							!!gachaName[0] && allowedGachas.has(type),
 					)
 					.map(
-						async ([id]) =>
-							[id, await bestdoriJSON(`/api/gacha/${id}.json`)] as const,
+						async ([id, { gachaName, publishedAt }]) =>
+							[
+								id,
+								await bestdoriJSON<z.input<typeof Gacha>>(
+									`/api/gacha/${id}.json`,
+									(latest) =>
+										deepEqual(gachaName, latest.gachaName) &&
+										deepEqual(publishedAt, latest.publishedAt),
+								),
+							] as const,
 					),
 			);
 

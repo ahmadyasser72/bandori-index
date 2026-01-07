@@ -1,8 +1,9 @@
+import { deepEqual } from "fast-equals";
 import z from "zod";
 
 import { bestdoriJSON } from "..";
 import { CardAttribute, EventType, Id } from "./constants";
-import { dateTimestamp, parseRegionTuple } from "./helpers";
+import { asRegionTuple, dateTimestamp, parseRegionTuple } from "./helpers";
 
 // /api/events/$id.json
 export const Event = z
@@ -41,16 +42,27 @@ export const Event = z
 export const Events = z
 	.record(
 		z.string(),
-		z.object({ eventName: z.string().apply(parseRegionTuple) }),
+		z.object({
+			eventName: z.string().apply(asRegionTuple),
+			startAt: z.string().apply(asRegionTuple),
+		}),
 	)
 	.pipe(
 		z.preprocess(async (events) => {
 			const entries = await Promise.all(
 				Object.entries(events)
-					.filter(([, { eventName }]) => !!eventName.jp)
+					.filter(([, { eventName }]) => !!eventName[0])
 					.map(
-						async ([id]) =>
-							[id, await bestdoriJSON(`/api/events/${id}.json`)] as const,
+						async ([id, { eventName, startAt }]) =>
+							[
+								id,
+								await bestdoriJSON<z.input<typeof Event>>(
+									`/api/events/${id}.json`,
+									(latest) =>
+										deepEqual(eventName, latest.eventName) &&
+										deepEqual(startAt, latest.startAt),
+								),
+							] as const,
 					),
 			);
 

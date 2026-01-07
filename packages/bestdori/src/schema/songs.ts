@@ -1,8 +1,9 @@
+import { deepEqual } from "fast-equals";
 import z from "zod";
 
 import { bestdoriJSON } from "..";
 import { Id, SongDifficulty } from "./constants";
-import { dateTimestamp, parseRegionTuple } from "./helpers";
+import { asRegionTuple, dateTimestamp, parseRegionTuple } from "./helpers";
 
 // /api/songs/$id.json
 export const Song = z
@@ -13,16 +14,31 @@ export const Song = z
 		musicTitle: z.string().apply(parseRegionTuple),
 		publishedAt: dateTimestamp.apply(parseRegionTuple),
 		difficulty: z
-			.record(z.string(), z.object({ playLevel: z.number().positive() }))
+			.record(
+				z.string(),
+				z.object({
+					playLevel: z.number().positive(),
+					publishedAt: z.string().apply(asRegionTuple).optional(),
+				}),
+			)
 			.pipe(
 				z.preprocess(
 					(difficultyMap) =>
 						Object.fromEntries(
 							Object.entries(difficultyMap).map(
-								([difficulty, { playLevel }]) => [difficulty, playLevel],
+								([difficulty, { playLevel: level, publishedAt }]) => [
+									difficulty,
+									{ level, publishedAt },
+								],
 							),
 						),
-					z.record(SongDifficulty, z.number().positive()),
+					z.record(
+						SongDifficulty,
+						z.object({
+							level: z.number().positive(),
+							publishedAt: dateTimestamp.apply(parseRegionTuple).optional(),
+						}),
+					),
 				),
 			),
 	})
@@ -33,16 +49,49 @@ export const Song = z
 export const Songs = z
 	.record(
 		z.string(),
-		z.object({ musicTitle: z.string().apply(parseRegionTuple) }),
+		z.object({
+			musicTitle: z.string().apply(asRegionTuple),
+			publishedAt: z.string().apply(asRegionTuple),
+			difficulty: z.record(
+				z.string(),
+				z.object({
+					playLevel: z.number().positive(),
+					publishedAt: z.string().apply(asRegionTuple).optional(),
+				}),
+			),
+		}),
 	)
 	.pipe(
 		z.preprocess(async (songs) => {
 			const entries = await Promise.all(
 				Object.entries(songs)
-					.filter(([, { musicTitle }]) => !!musicTitle.jp || !!musicTitle.en)
+					.filter(([, { musicTitle }]) => !!musicTitle[0] || !!musicTitle[1])
 					.map(
-						async ([id]) =>
-							[id, await bestdoriJSON(`/api/songs/${id}.json`)] as const,
+						async ([id, { musicTitle, publishedAt, difficulty }]) =>
+							[
+								id,
+								await bestdoriJSON<z.input<typeof Song>>(
+									`/api/songs/${id}.json`,
+									(latest) => {
+										const latestDifficulty = Object.fromEntries(
+											Object.entries(latest.difficulty).map(
+												([id, { playLevel, publishedAt }]) => [
+													id,
+													publishedAt
+														? { playLevel, publishedAt }
+														: { playLevel },
+												],
+											),
+										);
+
+										return (
+											deepEqual(musicTitle, latest.musicTitle) &&
+											deepEqual(publishedAt, latest.publishedAt) &&
+											deepEqual(difficulty, latestDifficulty)
+										);
+									},
+								),
+							] as const,
 					),
 			);
 
