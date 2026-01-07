@@ -274,13 +274,23 @@ const data = await time("resolve references", () => ({
 						...entry,
 
 						get assets() {
-							const chunk = 10 * Math.ceil(id / 10);
 							return {
 								audio: `/assets/jp/sound/${bgmId}_rip/${bgmId}.mp3`,
-								cover: jacketImage.map(
-									(id) =>
-										`/assets/jp/musicjacket/musicjacket${chunk}_rip/assets-star-forassetbundle-startapp-musicjacket-musicjacket${chunk}-${id}-jacket.png`,
-								),
+								cover: jacketImage.map((albumId) => {
+									let chunk: number;
+									switch (albumId) {
+										case "miracle":
+										case "kirayume":
+											chunk = 30;
+											break;
+
+										default:
+											chunk = 10 * Math.ceil(id / 10);
+											break;
+									}
+
+									return `/assets/jp/musicjacket/musicjacket${chunk}_rip/assets-star-forassetbundle-startapp-musicjacket-musicjacket${chunk}-${albumId}-jacket.png`;
+								}),
 							};
 						},
 					},
