@@ -43,23 +43,17 @@ export const Gacha = z
 			if (!cards || !weights) return null;
 
 			return !!cards
-				? new Map(
-						Object.entries(cards)
-							.filter(([, { pickup }]) => pickup)
-							.map(([id, { rarityIndex: rarity, weight, pickup }]) => {
-								const { rate, weightTotal } = weights[rarity]!;
-								const weightedRate = (weight / weightTotal) * rate;
-								return [
-									Number(id),
-									{
-										pickup,
-										rarity,
-										rate:
-											Math.round((weightedRate + Number.EPSILON) * 100) / 100,
-									},
-								] as const;
-							}),
-					)
+				? Object.entries(cards)
+						.filter(([, { pickup }]) => pickup)
+						.map(([card, { rarityIndex: rarity, weight, pickup }]) => {
+							const { rate, weightTotal } = weights[rarity]!;
+							const weightedRate = (weight / weightTotal) * rate;
+							return {
+								cardId: Number(card),
+								pickup,
+								rate: Math.round((weightedRate + Number.EPSILON) * 100) / 100,
+							};
+						})
 				: null;
 		};
 
@@ -69,8 +63,7 @@ export const Gacha = z
 			rates: { jp: parseGachaRate("jp"), en: parseGachaRate("en") },
 			...entry,
 		};
-	})
-	.readonly();
+	});
 
 // /api/gacha/all.5.json
 export const Gachas = z
@@ -83,37 +76,40 @@ export const Gachas = z
 		}),
 	)
 	.pipe(
-		z.preprocess(async (gachas) => {
-			const allowedGachas = new Set([
-				"permanent",
-				"limited",
-				"dreamfes",
-				"birthday",
-				"kirafes",
-			]);
+		z.preprocess(
+			async (gachas) => {
+				const allowedGachas = new Set([
+					"permanent",
+					"limited",
+					"dreamfes",
+					"birthday",
+					"kirafes",
+				]);
 
-			const entries = await Promise.all(
-				Object.entries(gachas)
-					.filter(
-						([, { gachaName, type }]) =>
-							!!gachaName[0] && allowedGachas.has(type),
-					)
-					.map(
-						async ([id, { gachaName, publishedAt }]) =>
-							[
-								id,
-								await bestdoriJSON<z.input<typeof Gacha>>(
-									`/api/gacha/${id}.json`,
-									(latest) =>
-										deepEqual(gachaName, latest.gachaName) &&
-										deepEqual(publishedAt, latest.publishedAt),
-								),
-							] as const,
-					),
-			);
+				const entries = await Promise.all(
+					Object.entries(gachas)
+						.filter(
+							([, { gachaName, type }]) =>
+								!!gachaName[0] && allowedGachas.has(type),
+						)
+						.map(
+							async ([id, { gachaName, publishedAt }]) =>
+								[
+									id,
+									await bestdoriJSON<z.input<typeof Gacha>>(
+										`/api/gacha/${id}.json`,
+										(latest) =>
+											deepEqual(gachaName, latest.gachaName) &&
+											deepEqual(publishedAt, latest.publishedAt),
+									),
+								] as const,
+						),
+				);
 
-			return new Map(entries);
-		}, z.map(Id, Gacha).readonly()),
+				return new Map(entries);
+			},
+			z.map(Id, Gacha),
+		),
 	);
 
 export type Gachas = z.infer<typeof Gachas>;

@@ -42,8 +42,7 @@ export const Song = z
 				),
 			),
 	})
-	.transform(({ musicTitle: title, ...entry }) => ({ title, ...entry }))
-	.readonly();
+	.transform(({ musicTitle: title, ...entry }) => ({ title, ...entry }));
 
 // /api/songs/all.5.json
 export const Songs = z
@@ -62,41 +61,44 @@ export const Songs = z
 		}),
 	)
 	.pipe(
-		z.preprocess(async (songs) => {
-			const entries = await Promise.all(
-				Object.entries(songs)
-					.filter(([, { musicTitle }]) => !!musicTitle[0] || !!musicTitle[1])
-					.map(
-						async ([id, { musicTitle, publishedAt, difficulty }]) =>
-							[
-								id,
-								await bestdoriJSON<z.input<typeof Song>>(
-									`/api/songs/${id}.json`,
-									(latest) => {
-										const latestDifficulty = Object.fromEntries(
-											Object.entries(latest.difficulty).map(
-												([id, { playLevel, publishedAt }]) => [
-													id,
-													publishedAt
-														? { playLevel, publishedAt }
-														: { playLevel },
-												],
-											),
-										);
+		z.preprocess(
+			async (songs) => {
+				const entries = await Promise.all(
+					Object.entries(songs)
+						.filter(([, { musicTitle }]) => !!musicTitle[0] || !!musicTitle[1])
+						.map(
+							async ([id, { musicTitle, publishedAt, difficulty }]) =>
+								[
+									id,
+									await bestdoriJSON<z.input<typeof Song>>(
+										`/api/songs/${id}.json`,
+										(latest) => {
+											const latestDifficulty = Object.fromEntries(
+												Object.entries(latest.difficulty).map(
+													([id, { playLevel, publishedAt }]) => [
+														id,
+														publishedAt
+															? { playLevel, publishedAt }
+															: { playLevel },
+													],
+												),
+											);
 
-										return (
-											deepEqual(musicTitle, latest.musicTitle) &&
-											deepEqual(publishedAt, latest.publishedAt) &&
-											deepEqual(difficulty, latestDifficulty)
-										);
-									},
-								),
-							] as const,
-					),
-			);
+											return (
+												deepEqual(musicTitle, latest.musicTitle) &&
+												deepEqual(publishedAt, latest.publishedAt) &&
+												deepEqual(difficulty, latestDifficulty)
+											);
+										},
+									),
+								] as const,
+						),
+				);
 
-			return new Map(entries);
-		}, z.map(Id, Song).readonly()),
+				return new Map(entries);
+			},
+			z.map(Id, Song),
+		),
 	);
 
 export type Songs = z.infer<typeof Songs>;

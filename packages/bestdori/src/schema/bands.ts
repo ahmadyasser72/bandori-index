@@ -11,10 +11,9 @@ export const Bands = z
 	.transform((bands) => {
 		const entries = Object.entries(bands)
 			.filter(([, { bandName }]) => !!bandName.jp)
-			.map(([id, { bandName }]) => [Number(id), bandName] as const);
+			.map(([id, { bandName: name }]) => [Number(id), { name }] as const);
 
 		return new Map(entries);
-	})
-	.readonly();
+	});
 
 export type Bands = z.infer<typeof Bands>;

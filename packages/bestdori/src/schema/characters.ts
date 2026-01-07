@@ -22,7 +22,6 @@ export const Characters = z
 		);
 
 		return new Map(entries);
-	})
-	.readonly();
+	});
 
 export type Characters = z.infer<typeof Characters>;

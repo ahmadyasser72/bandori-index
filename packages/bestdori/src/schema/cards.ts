@@ -17,10 +17,9 @@ export const Card = z
 		releasedAt: dateTimestamp.apply(parseRegionTuple),
 	})
 	.transform(({ prefix: name, ...entry }) => ({
-		...entry,
 		name: { jp: name.jp!, en: name.en },
-	}))
-	.readonly();
+		...entry,
+	}));
 
 // /api/cards/all.5.json
 export const Cards = z
@@ -32,26 +31,29 @@ export const Cards = z
 		}),
 	)
 	.pipe(
-		z.preprocess(async (cards) => {
-			const entries = await Promise.all(
-				Object.entries(cards)
-					.filter(([, { prefix }]) => !!prefix[0])
-					.map(
-						async ([id, { prefix, releasedAt }]) =>
-							[
-								id,
-								await bestdoriJSON<z.input<typeof Card>>(
-									`/api/cards/${id}.json`,
-									(latest) =>
-										deepEqual(prefix, latest.prefix) &&
-										deepEqual(releasedAt, latest.releasedAt),
-								),
-							] as const,
-					),
-			);
+		z.preprocess(
+			async (cards) => {
+				const entries = await Promise.all(
+					Object.entries(cards)
+						.filter(([, { prefix }]) => !!prefix[0])
+						.map(
+							async ([id, { prefix, releasedAt }]) =>
+								[
+									id,
+									await bestdoriJSON<z.input<typeof Card>>(
+										`/api/cards/${id}.json`,
+										(latest) =>
+											deepEqual(prefix, latest.prefix) &&
+											deepEqual(releasedAt, latest.releasedAt),
+									),
+								] as const,
+						),
+				);
 
-			return new Map(entries);
-		}, z.map(Id, Card).readonly()),
+				return new Map(entries);
+			},
+			z.map(Id, Card),
+		),
 	);
 
 export type Cards = z.infer<typeof Cards>;

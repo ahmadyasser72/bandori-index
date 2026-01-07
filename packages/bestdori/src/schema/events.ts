@@ -35,8 +35,7 @@ export const Event = z
 			cards: members.map(({ situationId }) => situationId),
 			...entry,
 		}),
-	)
-	.readonly();
+	);
 
 // /api/events/all.5.json
 export const Events = z
@@ -48,26 +47,29 @@ export const Events = z
 		}),
 	)
 	.pipe(
-		z.preprocess(async (events) => {
-			const entries = await Promise.all(
-				Object.entries(events)
-					.filter(([, { eventName }]) => !!eventName[0])
-					.map(
-						async ([id, { eventName, startAt }]) =>
-							[
-								id,
-								await bestdoriJSON<z.input<typeof Event>>(
-									`/api/events/${id}.json`,
-									(latest) =>
-										deepEqual(eventName, latest.eventName) &&
-										deepEqual(startAt, latest.startAt),
-								),
-							] as const,
-					),
-			);
+		z.preprocess(
+			async (events) => {
+				const entries = await Promise.all(
+					Object.entries(events)
+						.filter(([, { eventName }]) => !!eventName[0])
+						.map(
+							async ([id, { eventName, startAt }]) =>
+								[
+									id,
+									await bestdoriJSON<z.input<typeof Event>>(
+										`/api/events/${id}.json`,
+										(latest) =>
+											deepEqual(eventName, latest.eventName) &&
+											deepEqual(startAt, latest.startAt),
+									),
+								] as const,
+						),
+				);
 
-			return new Map(entries);
-		}, z.map(Id, Event).readonly()),
+				return new Map(entries);
+			},
+			z.map(Id, Event),
+		),
 	);
 
 export type Events = z.infer<typeof Events>;
