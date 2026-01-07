@@ -42,7 +42,8 @@ const get = async <K extends keyof typeof SCHEMAS>(
 		`get ${key} (${pathname})`,
 		bestdoriJSON(pathname, false),
 	);
-	return SCHEMAS[key].parseAsync(json) as never;
+
+	return time(`get ${key} entries`, SCHEMAS[key].parseAsync(json) as never);
 };
 
 const [bands, cards, characters, events, gachas, songs] = await Promise.all([
