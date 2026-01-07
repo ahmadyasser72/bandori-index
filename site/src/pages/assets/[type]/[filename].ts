@@ -71,7 +71,7 @@ export const getStaticPaths = (() => {
 					type: "card",
 					filename:
 						[id, variant, trained ? "trained" : "base"].join("_") +
-						".${IMAGE_FORMAT}",
+						`.${IMAGE_FORMAT}`,
 				},
 				props: { kind: "image" as const, pathname },
 			})),
@@ -84,7 +84,7 @@ export const getStaticPaths = (() => {
 		(["banner", "background"] as const).map((variant) => ({
 			params: {
 				type: "event",
-				filename: [id, variant].join("_") + ".${IMAGE_FORMAT}",
+				filename: [id, variant].join("_") + `.${IMAGE_FORMAT}`,
 			},
 			props: { kind: "image" as const, pathname: assets[variant] },
 		})),
@@ -96,7 +96,7 @@ export const getStaticPaths = (() => {
 			.map((variant) => ({
 				params: {
 					type: "gacha",
-					filename: [id, variant].join("_") + ".${IMAGE_FORMAT}",
+					filename: [id, variant].join("_") + `.${IMAGE_FORMAT}`,
 				},
 				props: { kind: "image" as const, pathname: assets[variant]! },
 			})),
