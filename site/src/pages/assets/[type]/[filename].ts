@@ -6,6 +6,8 @@ import type {
 	InferGetStaticPropsType,
 } from "astro";
 
+import { shuffle } from "fast-shuffle";
+
 import { bestdori } from "@bandori-index/bestdori";
 import {
 	attributes,
@@ -113,7 +115,7 @@ export const getStaticPaths = (() => {
 		})),
 	]) satisfies GetStaticPathsResult;
 
-	return [
+	return shuffle([
 		...attributeAssets,
 		...bandAssets,
 		...characterAssets,
@@ -121,7 +123,7 @@ export const getStaticPaths = (() => {
 		...eventAssets,
 		...gachaAssets,
 		...songAssets,
-	] as const;
+	] as const);
 }) satisfies GetStaticPaths;
 
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
