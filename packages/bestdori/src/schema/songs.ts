@@ -11,7 +11,7 @@ export const Song = z
 		bgmId: z.string(),
 		tag: z.enum(["normal", "anime", "tie_up"]),
 		bandId: Id,
-		jacketImage: z.array(z.string()),
+		jacketImage: z.array(z.string().toLowerCase()),
 		musicTitle: z.string().apply(parseRegionTuple),
 		publishedAt: dateTimestamp.apply(parseRegionTuple),
 		difficulty: z
