@@ -48,8 +48,8 @@ export const bestdori = async <T = never>(
 	const response = await fetch(url);
 	const isHTML = response.headers.get("content-type") === "text/html";
 	if (!response.ok || isHTML) {
-		if (pathname.startsWith("/assets/jp/"))
-			return bestdori(pathname.replace("jp", "en"), skipFetch);
+		if (pathname.startsWith("/assets/en/"))
+			return bestdori(pathname.replace("en", "jp"), skipFetch);
 
 		throw new Error(`request to ${url.href} failed`);
 	}

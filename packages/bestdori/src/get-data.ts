@@ -83,6 +83,9 @@ const gachaLogoResourceNames = await time(
 	).then((it) => new Set(Object.keys(it.gacha.screen))),
 );
 
+const getAssetPath = (pathname: string, name: { en: string | null }) =>
+	["/assets", !!name.en ? "en" : "jp", pathname].join("/");
+
 const data = await time("resolve references", () => ({
 	get attributes() {
 		return new Map(
@@ -124,7 +127,10 @@ const data = await time("resolve references", () => ({
 
 							const out = {
 								voice: resourceName
-									? `/assets/jp/sound/voice/gacha/${resourceName}_rip/${resourceSetName}.mp3`
+									? getAssetPath(
+											`sound/voice/gacha/${resourceName}_rip/${resourceSetName}.mp3`,
+											entry.name,
+										)
 									: undefined,
 								icon: [] as [boolean, string][],
 								full: [] as [boolean, string][],
@@ -137,13 +143,19 @@ const data = await time("resolve references", () => ({
 
 								return [
 									trained,
-									`/assets/jp/thumb/chara/card${chunkId}_rip/${resourceSetName}_${trained ? "after_training" : "normal"}.png`,
+									getAssetPath(
+										`thumb/chara/card${chunkId}_rip/${resourceSetName}_${trained ? "after_training" : "normal"}.png`,
+										entry.name,
+									),
 								];
 							};
 							const full = (trained: boolean): [boolean, string] => {
 								return [
 									trained,
-									`/assets/jp/characters/resourceset/${resourceSetName}_rip/card_${trained ? "after_training" : "normal"}.png`,
+									getAssetPath(
+										`characters/resourceset/${resourceSetName}_rip/card_${trained ? "after_training" : "normal"}.png`,
+										entry.name,
+									),
 								];
 							};
 
@@ -216,8 +228,14 @@ const data = await time("resolve references", () => ({
 						...entry,
 
 						assets: {
-							banner: `/assets/jp/homebanner_rip/${bannerAssetBundleName}.png`,
-							background: `/assets/jp/event/${assetBundleName}/topscreen_rip/bg_eventtop.png`,
+							banner: getAssetPath(
+								`homebanner_rip/${bannerAssetBundleName}.png`,
+								entry.name,
+							),
+							background: getAssetPath(
+								`event/${assetBundleName}/topscreen_rip/bg_eventtop.png`,
+								entry.name,
+							),
 						},
 					},
 				],
@@ -250,10 +268,16 @@ const data = await time("resolve references", () => ({
 
 						assets: {
 							logo: gachaLogoResourceNames.has(resourceName)
-								? `/assets/jp/gacha/screen/${resourceName}_rip/logo.png`
+								? getAssetPath(
+										`gacha/screen/${resourceName}_rip/logo.png`,
+										entry.name,
+									)
 								: undefined,
 							banner: bannerAssetBundleName
-								? `/assets/jp/homebanner_rip/${bannerAssetBundleName}.png`
+								? getAssetPath(
+										`homebanner_rip/${bannerAssetBundleName}.png`,
+										entry.name,
+									)
 								: undefined,
 						},
 					},
@@ -275,7 +299,10 @@ const data = await time("resolve references", () => ({
 
 						get assets() {
 							return {
-								audio: `/assets/jp/sound/${bgmId}_rip/${bgmId}.mp3`,
+								audio: getAssetPath(
+									`sound/${bgmId}_rip/${bgmId}.mp3`,
+									entry.title,
+								),
 								cover: jacketImage.map((albumId) => {
 									let chunk: number;
 									switch (albumId) {
@@ -289,7 +316,10 @@ const data = await time("resolve references", () => ({
 											break;
 									}
 
-									return `/assets/jp/musicjacket/musicjacket${chunk}_rip/assets-star-forassetbundle-startapp-musicjacket-musicjacket${chunk}-${albumId}-jacket.png`;
+									return getAssetPath(
+										`musicjacket/musicjacket${chunk}_rip/assets-star-forassetbundle-startapp-musicjacket-musicjacket${chunk}-${albumId}-jacket.png`,
+										entry.title,
+									);
 								}),
 							};
 						},
