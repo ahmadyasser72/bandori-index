@@ -50,6 +50,8 @@ export const bestdori = async <T = never>(
 	if (!response.ok || isHTML) {
 		if (pathname.startsWith("/assets/en/"))
 			return bestdori(pathname.replace("en", "jp"), skipFetch);
+		else if (pathname.startsWith("/assets/jp"))
+			return bestdori(pathname.replace("jp", "cn"), skipFetch);
 
 		throw new Error(`request to ${url.href} failed`);
 	}
