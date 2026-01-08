@@ -4,7 +4,8 @@
 	"private": true,
 	"exports": {
 		".": "./src/index.js",
-		"./data": "./src/data.js"
+		"./data": "./src/data.js",
+		"./utilities": "./src/utilities.js"
 	},
 	"scripts": {
 		"update": "bun src/get-data.ts"

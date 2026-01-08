@@ -1,0 +1,38 @@
+---
+import { songs } from "@bandori-index/bestdori/data";
+import { unwrap } from "@bandori-index/bestdori/utilities";
+import { getPage, paginate } from "~/lib/utilities/page";
+
+export const partial = true;
+
+const page = getPage(Astro);
+const { items, nextPage } = paginate({ items: [...songs.entries()], page });
+const nextPageProps = nextPage
+	? {
+			"hx-get": "/songs/data?page=" + nextPage,
+			"hx-swap": "afterend",
+			"hx-trigger": "intersect once",
+		}
+	: {};
+---
+
+{
+	items.map(([id, { title, band }], idx) => (
+		<div
+			{...(idx + 1 === items.length ? nextPageProps : {})}
+			class="card bg-base-100 image-full shadow-sm"
+		>
+			<figure>
+				<img
+					src={`/assets/song/${id}_0.avif`}
+					alt={[unwrap(title), "album cover"].join(" ")}
+					class="aspect-square w-full"
+				/>
+			</figure>
+			<div class="card-body items-center justify-end text-center">
+				<h2 class="card-title">{unwrap(title)}</h2>
+				<div>{unwrap(band.name)}</div>
+			</div>
+		</div>
+	))
+}

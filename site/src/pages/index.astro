@@ -3,5 +3,20 @@ import BaseLayout from "~/layouts/base-layout.astro";
 ---
 
 <BaseLayout>
-	<div class="font-semibold">index.astro</div>
+	<div class="absolute inset-0 flex items-center justify-between">
+		<div class="flex flex-1 flex-col gap-2 text-center">
+			<div class="font-semibold">bandori-index</div>
+
+			<div
+				hx-boost="true"
+				hx-target="main"
+				hx-select="main"
+				hx-swap="outerHTML transition:true"
+				class="flex flex-col gap-1"
+			>
+				<a href="/songs" class="link">/songs</a>
+				<a href="/songs" class="link">/songs</a>
+			</div>
+		</div>
+	</div>
 </BaseLayout>
