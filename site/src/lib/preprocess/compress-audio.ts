@@ -30,5 +30,8 @@ export const compressAudio = async (
 	const exitCode = await ffmpeg.exited;
 	if (exitCode !== 0) throw new Error(`failed to compress audio (${filename})`);
 
-	return new Response(ffmpeg.stdout);
+	const compressed = await new Response(ffmpeg.stdout).arrayBuffer();
+	await outputFile.write(compressed);
+
+	return new Response(compressed);
 };
